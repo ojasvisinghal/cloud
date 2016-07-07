@@ -31,6 +31,10 @@ def staas(c,username,password):
                         os.system("mount /dev/userVG/{0}nfs /home/{0}/{0}".format(username))
 			
 			#doing entry in database
+			import MySQLdb
+			os.system("systemctl restart mariadb")
+			x=MySQLdb.connect("localhost")
+			y=x.cursor()
 			y.execute("use cloud;")
 			k=y.execute("UPDATE USER SET NFS='/dev/userVG/{0}nfs' where USERNAME='{0}';".format(username))
 			x.commit()
@@ -59,7 +63,10 @@ def staas(c,username,password):
 #for snapshot work
                         #commands.getstatusoutput("echo '/dev/mapper/userVG-{}' >>/root/Desktop/CloudServer/snapshotfile.txt")
 
-
+			import MySQLdb
+			os.system("systemctl restart mariadb")
+			x=MySQLdb.connect("localhost")
+			y=x.cursor()
 			#doing entry in database
 			y.execute("use cloud;")
 			k=y.execute("UPDATE USER SET SSHFS='/dev/userVG/{0}sshfs' where USERNAME='{0}';".format(username))
@@ -99,6 +106,10 @@ def staas(c,username,password):
 			os.system("echo '[{0}]\npath= /media/{0}\nwritable=yes' >> /etc/samba/smb.conf".format(username))
 
 			# doing entery to cloud table
+			import MySQLdb
+			os.system("systemctl restart mariadb")
+			x=MySQLdb.connect("localhost")
+			y=x.cursor()
 			y.execute("use cloud;")
 			k=y.execute("UPDATE USER SET SAMBA='/dev/userVG/{0}samba' where USERNAME='{0}';".format(username))
 			x.commit()
@@ -206,9 +217,14 @@ def staas(c,username,password):
 			os.system("echo '<target {0}>\nbacking-store /dev/mapper/userVG-{0}iscsi\n</target>' >>/etc/tgt/conf.d/{0}.conf".format(username))
 
 			#doing entry in database
+			import MySQLdb
+			os.system("systemctl restart mariadb")
+			x=MySQLdb.connect("localhost")
+			y=x.cursor()
 			y.execute("use cloud;")
 			k=y.execute("UPDATE USER SET ISCSI='/dev/userVG/{0}iscsi' where USERNAME='{0}';".format(username))
-
+			x.commit()
+		
 			os.system("systemctl restart tgtd")
 			os.system("systemctl enable tgtd")
 			#sending signal to client to start processing
@@ -218,21 +234,28 @@ def staas(c,username,password):
 
 #snapshot
 		elif data == '2':
-			q =y.execute("select ISCSI from USER where USERNAME='{}';".format(username))
-			if q[0][0]!= 'None':
-				os.system("lvcreate --name {}snap --size 2M -s {}".format(q[0][0]))
-				os.system("mkdir /media/{0}snap".format(username))
+			import MySQLdb
+			os.system("systemctl restart mariadb")
+			x=MySQLdb.connect("localhost")
+			y=x.cursor()
+			y.execute("use cloud;")
+			e = y.execute("select ISCSI from USER where USERNAME='{0}';".format(username))
+			q = y.fetchall()
+			if e == 1L and q[0][0]!= None:
+				os.system("lvcreate --name {0}snap --size 2M -s {1}".format(username,q[0][0]))
+				commands.getstatusoutput("mkdir /media/{0}snap".format(username))
 				os.system("mount /dev/userVG/{0}snap /media/{0}snap".format(username))
 				os.system("chown {0} /media/{0}snap".format(username))
 				os.system("chmod 700 /media/{0}snap".format(username))
 			
-		                os.system("echo '/media/{0}snap *(rw,no_root_squash)' >> /etc/exports".format(username))
+		                os.system("echo '/media/{0}snap *(rw,no_root_squash)' >>/etc/exports".format(username))
 		                os.system("systemctl restart nfs-server")
 		                os.system("systemctl enable nfs-server")
 #sending signal to client to start his processing
 
 				c.send("1")
-			
+			else:
+				os.system("dialog --infobox 'error' 10 30")
 
 # back option
 	elif choice == '3':
@@ -249,6 +272,10 @@ def iaas(c,username,password):
 
 	if choice == '1':
 		#fetching all os with this user
+		import MySQLdb
+		os.system("systemctl restart mariadb")
+		x=MySQLdb.connect("localhost")
+		y=x.cursor()
 		y.execute("use cloud;")
 		q = y.execute("select * from GALLERY where USERNAME='{}'".format(username))
 		if q == 0L:
@@ -257,7 +284,7 @@ def iaas(c,username,password):
 		else:
 			c.send('1')
 			p = y.fetchall()
-			if p[0][1] != 'None':
+			if p[0][1] != None:
 				p1 = 0
 				# picking UBuntu image
 				port1 = p[0][2]
@@ -265,7 +292,7 @@ def iaas(c,username,password):
 			else:
 				p1 = 1
 
-			if p[0][3] != 'None':
+			if p[0][3] != None:
 				# picking UBuntu image
 				p2 = 0
 				port2 = p[0][4]
@@ -274,7 +301,7 @@ def iaas(c,username,password):
 			else:
 				p2 = 1
 
-			if p[0][5] != 'None':
+			if p[0][5] != None:
 				p3 = 0
 				# picking UBuntu image
 				port3 = p[0][6]
@@ -302,14 +329,15 @@ def iaas(c,username,password):
 	elif choice == '2':
 	#recieving image
 		image = c.recv(30)
+		print image
 
 	#recieving values from client
 		ram = c.recv(20)
 		print ram
 		cpu = c.recv(30)
 		print cpu
-		hdd = c.recv(30)
-		print hdd
+		#hdd = c.recv(30)
+		#print hdd
 		#os.system("yum install virt-install")
 		
 
@@ -317,21 +345,26 @@ def iaas(c,username,password):
 	if image == '1':
 		#os.system("touch /var/lib/libvirt/{}.qcow2".format(username))
 		#os.system("cp /var/lib/libvirt/images/{}.qcow2 /var/lib/libvirt/images/oja.qcow2".format(username))
-		port = random.randint(6000,6999)	
+		port = random.randint(16000,17000)	
 		sss = random.randint(7000,8000)
 
 		os.system("virt-install --name {0}rhel --import --hvm --ram {1} --disk path=/var/lib/libvirt/images/name.qcow2 --vcpus {2} --os-type linux --noautoconsole --vnc --vncport={3} --vnclisten=0.0.0.0".format(username,ram,cpu,port))
 
-
+		
+		import MySQLdb
+		os.system("systemctl restart mariadb")
+		x=MySQLdb.connect("localhost")
+		y=x.cursor()
+		y.execute("use cloud;")
 		a = y.execute("select * from GALLERY where USERNAME='{0}'".format(username))
 		if a == 0L:
 		#checking whether user alredy exist ar not
-			y.execute("use GALLERY;")
+			y.execute("use cloud;")
 			y.execute("insert into GALLERY(USERNAME,REDHAT,PORT2) values('{0}','rhel7','{1}')".format(username,sss))
 			x.commit()
 		else:
-			y.execute("use GALLERY;")
-			y.execute("insert into GALLERY(REDHAT,PORT2) values('rhel7','{0}')".format(sss))
+			y.execute("use cloud;")
+			y.execute("update GALLERY set REDHAT = 'rhel', PORT2 ='{1}' where USERNAME = '{0}' ".format(username,sss))
 			x.commit()
 
 		#os.system("yum install httpd -y")
@@ -357,19 +390,26 @@ def iaas(c,username,password):
 		port = random.randint(6000,6999)	
 		sss = random.randint(7000,8000)
 
-		os.system("virt-install --name {0}rhel --import --hvm --ram {1} --disk path=/var/lib/libvirt/images/name.qcow2 --vcpus {2} --os-type linux --noautoconsole --vnc --vncport={3} --vnclisten=0.0.0.0".format(username,ram,cpu,port))
+		os.system("virt-install --name {0}ubun --import --hvm --ram {1} --disk path=/var/lib/libvirt/images/name3.qcow2 --vcpus {2} --os-type linux --noautoconsole --vnc --vncport={3} --vnclisten=0.0.0.0".format(username,ram,cpu,port))
 
-
+		import MySQLdb
+		os.system("systemctl restart mariadb")
+		x=MySQLdb.connect("localhost")
+		y=x.cursor()
+		y.execute("use cloud;")
 		a = y.execute("select * from GALLERY where USERNAME='{0}'".format(username))
 		if a == 0L:
 		#checking whether user alredy exist ar not
-			y.execute("use GALLERY;")
+			
+			y.execute("use cloud;")
 			y.execute("insert into GALLERY(USERNAME,UBUNTU,PORT1) values('{0}','ubuntu','{1}')".format(username,sss))
 			x.commit()
 		else:
-			y.execute("use GALLERY;")
-			y.execute("insert into GALLERY(UBUNTU,PORT1) values('ubuntu','{0}')".format(sss))
+			y.execute("use cloud;")
+			y.execute("update GALLERY set UBUNTU = 'ubuntu', PORT1 ='{1}' where USERNAME = '{0}' ".format(username,sss))
 			x.commit()
+
+		
 		os.system("systemctl restart httpd")
 	#sending msg to client
 		c.send("{}".format(sss))
@@ -385,18 +425,24 @@ def iaas(c,username,password):
 		port = random.randint(6000,6999)	
 		sss = random.randint(7000,8000)
 
-		os.system("virt-install --name {0}rhel --import --hvm --ram {1} --disk path=/var/lib/libvirt/images/name.qcow2 --vcpus {2} --os-type linux --noautoconsole --vnc --vncport={3} --vnclisten=0.0.0.0".format(username,ram,cpu,port))
+		os.system("virt-install --name {0}win --import --hvm --ram {1} --disk path=/var/lib/libvirt/images/name1.qcow2 --vcpus {2} --os-type linux --noautoconsole --vnc --vncport={3} --vnclisten=0.0.0.0".format(username,ram,cpu,port))
 
 
+		
+		import MySQLdb
+		os.system("systemctl restart mariadb")
+		x=MySQLdb.connect("localhost")
+		y=x.cursor()
+		y.execute("use cloud;")
 		a = y.execute("select * from GALLERY where USERNAME='{0}'".format(username))
 		if a == 0L:
 		#checking whether user alredy exist ar not
-			y.execute("use GALLERY;")
+			y.execute("use cloud;")
 			y.execute("insert into GALLERY(USERNAME,WINDOWS,PORT3) values('{0}','ubuntu','{1}')".format(username,sss))
 			x.commit()
 		else:
-			y.execute("use GALLERY;")
-			y.execute("insert into GALLERY(WINDOWS,PORT3) values('ubuntu','{0}')".format(sss))
+			y.execute("use cloud;")
+			y.execute("update GALLERY set WINDOWS = 'windows', PORT3 ='{1}' where USERNAME = '{0}' ".format(username,sss))
 			x.commit()
 
 		os.system("systemctl restart httpd")

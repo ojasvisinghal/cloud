@@ -1,4 +1,4 @@
 #!/usr/bin/python2
 import os
-os.system('useradd payal')
-os.system('echo q | passwd payal --stdin')
+os.system('useradd oj')
+os.system('echo oj | passwd oj --stdin')
