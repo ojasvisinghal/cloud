@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-import os,commands,time,usernfs,usersshfs,usersamba,userextend,usergallery,useros,usercaas,userpaas,usersaas,usermenu
+import os,commands,time,usernfs,usersshfs,usersamba,userextend,usergallery,useros,usercaas,userpaas,usersaas,usermenu,userqren
 
 
 
@@ -128,8 +128,8 @@ def iaas(c,username,password):
 
 #os with qrencode
 	if choice == '3':
-		userqr.qr(c,username,password)
-
+		userqren.qr(c,username,password)
+"""
 #os system  list
 	if choice == '4':
 		userlist.listt(c,username,password)
@@ -138,7 +138,7 @@ def iaas(c,username,password):
 	if choice == '5':
 		usermigrate.migrate(c,username,password)
 
-
+"""
 #iaas completed
 
 
