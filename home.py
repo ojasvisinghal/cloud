@@ -1,51 +1,57 @@
-
 #!/usr/bin/python2
 
-import services,os,signal,commands,socket,time,sys,usermenu,user
-s = socket.socket()
+import os,commands,socket,MySQLdb,one,onemenu
 
-s.connect(("192.168.122.1",3000))
+s=socket.socket()
+ip=""
+port=3000
+s.bind((ip,port))
+s.listen(5)
 
-os.system("dialog --inputbox 'Enter username' 7 40 2>/tmp/user.txt")
-fh = open("/tmp/user.txt")
-username = fh.read()
-fh.close()
+os.system("systemctl restart mariadb")
+x=MySQLdb.connect("localhost")
+y=x.cursor()
 
-os.system("dialog --insecure --passwordbox 'Enter password' 7 40 2>/tmp/passwd.txt")
-fk = open("/tmp/passwd.txt")
-passwd = fk.read()
-fk.close()
+def main(c):
+	username = c.recv(40)
+	password = c.recv(40)
 
-s.send(username)
-s.send(passwd)
+	#recieving signal whether to login ar register
+	sign = c.recv(30)
+	#login
+	if sign == '1':
+		x=MySQLdb.connect("localhost")
+		y=x.cursor()
+		y.execute("use cloud;")
+		s=y.execute("select * from USER where USERNAME='{}' and PASSWORD='{}';".format(username,password))
+	
+		if s != 0L:#means user exists
+			#checking password
+			#z=commands.getstatusoutput("sshpass -p {} ssh {}@192.168.122.116 ".format(password,username))
+			c.send("1")
 
-os.system("dialog --radiolist 'Login / Registration' 15 60 2 1 'Login' on 2 'register' off  2>/tmp/rgis.txt")
-fk = open("/tmp/rgis.txt")
-sign = fk.read()
-fk.close()
-
-#sending signal whether to login ar register
-s.send(sign)
-if sign == '1':
-#recieving signal
-	sk = s.recv(30)
-	if sk == '1':
-		usermenu.menu(s,username,passwd)
-		
+			onemenu.menu(c,username,password)
+	
+	#register
 	else:
-		os.system("dialog --infobox 'No Username or password exist' 5 50")
 
-#register
+		x=MySQLdb.connect("localhost")
+		y=x.cursor()
+		#doing entry to database as well as creating user
+		y.execute("use cloud;")
+		k=y.execute("insert into USER(USERNAME,PASSWORD) values('{}','{}');".format(username,password))
 
-elif sign == '2':
-#recieving signal
-	sk = s.recv(30)
-	if sk == '1':
-		usermenu.menu(s,username,passwd)
+		r = y.execute("insert into SNAP(USERNAME) values('{0}')".format(username))
+		#creating user
+
+		x.commit()
+		os.system("useradd {}".format(username))
+		os.system("echo {}| passwd {} --stdin".format(password,username))
+#sending signal for successful registration
+		c.send("1")
 		
-	else:
-		os.system("dialog --infobox 'Oops!! user with this username already exists' 7 70")
+		onemenu.menu(c,username,password)
 
-
-
-
+while True:
+	c,addr=s.accept()
+	main(c)
