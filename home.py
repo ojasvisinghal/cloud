@@ -6,12 +6,12 @@ s = socket.socket()
 
 s.connect(("192.168.122.1",3000))
 
-os.system("dialog --inputbox 'Enter username' 7 60 2>/tmp/user.txt")
+os.system("dialog --inputbox 'Enter username' 7 40 2>/tmp/user.txt")
 fh = open("/tmp/user.txt")
 username = fh.read()
 fh.close()
 
-os.system("dialog --insecure --passwordbox 'Enter password' 7 60 2>/tmp/passwd.txt")
+os.system("dialog --insecure --passwordbox 'Enter password' 7 40 2>/tmp/passwd.txt")
 fk = open("/tmp/passwd.txt")
 passwd = fk.read()
 fk.close()

@@ -9,9 +9,13 @@ def menu(s,username,passwd):
 	        fh = open("/tmp/a.txt")
 	        data = fh.read()
 	        fh.close()
-
+		
         	s.send(data)
-	        if data == '1':
+
+		if data == '':
+			os.system("dialog --infobox 'bye have a nice day !!!' 6 40 ")
+
+	        elif data == '1':
         	        user.staas(s,username,passwd)
 
         	elif data == '2':
@@ -25,8 +29,8 @@ def menu(s,username,passwd):
 
 		elif data == '5':
 			user.caas(s,username,passwd)
-        	else:
+
+        	elif data == '6':
                 	os.system("dialog --infobox 'Bye ! Have a nice day .....' 15 30")
                 	time.sleep(2)
-                	s.close()
 

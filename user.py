@@ -1,10 +1,10 @@
 #!/usr/bin/python2
-import os,commands,time,usernfs,usersshfs,usersamba,userextend,usergallery,useros,usercaas,userpaas,usersaas,usermenu
+import os,commands,time,usernfs,usersshfs,usersamba,useriscsi,userextend,usergallery,usersnap,useros,usercaas,userpaas,usersaas,usermenu,userqren
 
 
 
 def staas(c,username,password):
-	os.system("dialog --radiolist 'Choose your Storage' 8 60 3 1 'Object storage' on 2 'Block storage' off 3 'EXIT' off 2>/tmp/b.txt")
+	os.system("dialog --radiolist 'Choose your Storage' 15 60 3 1 'Object storage' on 2 'Block storage' off 3 'EXIT' off 2>/tmp/b.txt")
 
 
 	fh = open("/tmp/b.txt")
@@ -15,25 +15,23 @@ def staas(c,username,password):
 	c.send(choice)	
 
 
+	if choice == '':
+		usermenu.menu(c,username,password)
+
+
 #object
-	if choice == '1':
-		os.system("dialog --radiolist 'Storage Services' 20 60 5 1 'NFS' on 2 'SSHFS' off 3 'SAMBA' off 4 'EXTEND' off  5 'REMOVE' off 2>/tmp/cd.txt")
+	elif choice == '1':
+		os.system("dialog --radiolist 'Storage Services' 20 60 4 1 'NFS' on 2 'SSHFS' off 3 'SAMBA' off 4 'MOUNT SNAPSHOT' off 2>/tmp/cd.txt")
 		gh = open("/tmp/cd.txt")
 		dat = gh.read()
 		gh.close()
 
 		# sending which type of server user want
 		c.send(dat)
-		"""
-		#what you want
-		os.system("dialog --radiolist '@@@@ WHAT YOU WANT @@@@' 40 70 3 1 'ADD' on  2 'EXTEND' off 3 'REMOVE' off 2>/tmp/add.txt")
-		q = open("/tmp/add.txt")
-		add = q.read()
-		q.close()
-		#sending what user want
-		c.send(add)
-		"""
-#nfs
+
+		if dat == '':
+			pass
+#nfs	
 		if dat == '1':
 			usernfs.nfs(c,username,password)			
 #sshfs server
@@ -42,18 +40,24 @@ def staas(c,username,password):
 #samba server
 		elif dat == '3':
 			usersamba.samba(c,username,password)
+#mount snapshot
+		elif dat == '4':
+			usersnap.snap(c,username,password)
+		
+
+		"""
 #extend code
+
 		elif dat == '4':
                         userextend.extend(c,username,password)
-#remove code
-		elif dat == '5':
-			print 'jeeooko'
 
 		#staas(c,username,password)
-		
-###########  block ##############################
+		"""
 #block storage
 	elif choice == '2':
+		useriscsi.iscsi(c,username,password)
+
+		"""
 		os.system("dialog --radiolist 'choose among these' 15 60 2 1 'ISCSI' on 2 'SNAPSHOT' off 2>/tmp/block.txt")
 
 		fd = open("/tmp/block.txt")
@@ -66,6 +70,8 @@ def staas(c,username,password):
 
 #iscsi
 		if dat == '1':
+			
+
 			k = open("/tmp/size.txt")
                         size = k.read()
                         k.close()
@@ -91,7 +97,7 @@ def staas(c,username,password):
 			os.system("mkdir /root/Desktop/{}snap".format(username))
 			os.system("mount 192.168.122.1:/media/{0}snap /root/Desktop/{0}snap".format(username))
 
-
+		"""
 
 ######## EXIT ###############################
 
@@ -118,6 +124,9 @@ def iaas(c,username,password):
 	#sending choice 
 	c.send(choice)
 
+	if choice == '':
+		os.system("dialog --infobox 'bye have a nice day !!!' 6 40 ")
+
 #os gallery
 	if choice == '1':
 		usergallery.gallery(c,username,password)
@@ -128,8 +137,8 @@ def iaas(c,username,password):
 
 #os with qrencode
 	if choice == '3':
-		userqr.qr(c,username,password)
-
+		userqren.qr(c,username,password)
+"""
 #os system  list
 	if choice == '4':
 		userlist.listt(c,username,password)
@@ -138,15 +147,8 @@ def iaas(c,username,password):
 	if choice == '5':
 		usermigrate.migrate(c,username,password)
 
-
+"""
 #iaas completed
-
-
-
-
-
-
-
 
 
 def paas(c,username,password):

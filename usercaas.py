@@ -10,11 +10,42 @@ def caas(c,username,password):
 	
 	#running dkr
 	c.send(choice)
-	if choice == '1':
+
+	if choice == '':
+		os.system("dialog --infobox 'bye have a nice day !!!' 6 40 ")
+
+
+
+	elif choice == '1':
+		"""
+		os.system("dialog --inputbox 'Enter no of Centos dockers you want' 10 30 2>/tmp/wd.txt")
+		f = open("/tmp/wd.txt")
+		doc = f.read()
+		f.close()
+
+		#sending no. of dockers to server
+		c.send(doc)
+		l = []
+		d = int(doc)
+		#recieving ips of docker
+		for i in range(d):
+			ip = c.recv(30)
+			print ip
+			l.extend(ip)
+
+		# printing ips
+		for i in range(d):
+			print 'Docker {}  ip :  {}'.format(i+1,l[i])
+			print 'Password {}'.format(password)
+			print
+
+		#os.system("ssh {}@{}".format(username,ip))
+		"""
 		#recieving ip of docker
 		ip = c.recv(30)
 		os.system("ssh {}@{}".format(username,ip))
 			
+	
 	elif choice == '2':
 		#recieving ip of docker
 		ip = c.recv(30)
