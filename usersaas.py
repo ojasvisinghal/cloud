@@ -1,49 +1,42 @@
 #!/usr/bin/python2
-import os,commands,time
+import os,commands,time,usermenu
 
 def saas(c,username,password):
-	os.system("dialog --radiolist 'Software as a service' 30 80 3 1 'FIREFOX' on 2 'GEDIT' off 3 'VLC' off 2>/tmp/sas.txt")
+	os.system("dialog --menu 'Choose your software Software as a service' 30 80 5 1 'Firefox' 2 'Gedit' 3 'Vlc' 4 'Back' 5 'Exit' 2>/tmp/sas.txt")
 	o = open("/tmp/sas.txt")
 	choice = o.read()
 	o.close()
 
-	#sending choice to server to get permission
 	c.send(choice)
-	if choice == '1':
-
 #firefox
-		#setting signal to server to set password and create account for this user
+	if choice == '1':
 		data = c.recv(30)
 		if data == '1':
-		#sending password to server
-		#c.send(pswd)
 			os.system("ssh -X {}fire@192.168.122.1".format(username))
-			os.system("##################")
 		else:
-			os.system("###$$$$$$$ ERROR  FIREFOX $$$$########")
+			os.system("###$$$$$$$ ERROR IN  FIREFOX $$$$########")
 		
-
 #gedit
 	elif choice == '2':
-		  #setting signal to server to set password and create account for this user
                 data = c.recv(30)
                 if data == 1:
-                #sending password to server
-                #c.send(pswd)
                         os.system("ssh -X {}gedit@192.168.122.1".format(username))
                 else:
-                        os.system("###$$$$$$$ ERROR  GEDIT $$$$########")
-
+                        os.system("###$$$$$$$ ERROR IN GEDIT $$$$########")
 		
 #vlc
 	elif choice == '3':
-		 #setting signal to server to set password and create account for this user
                 data = c.recv(30)
                 if data == 1:
-                #sending password to server
-                #c.send(pswd)
                         os.system("ssh -X {}@192.168.122.1".format(password,username))
                 else:
-                        os.system("###$$$$$$$ ERROR VLC $$$$########")
+                        os.system("###$$$$$$$ ERROR IN VLC $$$$########")
 
+#back
+	elif choice == '4':
+		usermenu.menu(c,username,password)
+
+#exit
+	elif choice == '5':
+		os.system("dialog --infobox 'Bye Have a nice day' 10 40")
 
